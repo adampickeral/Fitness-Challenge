@@ -1,0 +1,20 @@
+<link type="text/css" href="{{ STATIC_URL }}jquery-ui-1.8.17.custom/css/custom-theme/jquery-ui-1.8.17.custom.css" rel="Stylesheet" />
+<script type="text/javascript" src="{{ STATIC_URL }}jquery-ui-1.8.17.custom/js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}jquery-ui-1.8.17.custom/js/jquery-ui-1.8.17.custom.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#date').datepicker();
+    });
+</script>
+
+<h1>Fitness Challenge Workout Entry</h1>
+<form action="/fitness_challenge/process/" method="post">
+{% csrf_token %}
+    <label for="name">Name</label>
+    <input id="name" name="name" type="text"/>
+    <label for="date">Date of workout</label>
+    <input id="date" name="date" type="text"/>
+    <br/>
+    <input type="submit" value="Submit"/>
+</form>

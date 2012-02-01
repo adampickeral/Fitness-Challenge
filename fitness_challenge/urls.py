@@ -5,5 +5,5 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^entry/', include('entry_system.urls')),
+    url(r'^fitness_challenge/', include('entry_system.urls')),
 )
