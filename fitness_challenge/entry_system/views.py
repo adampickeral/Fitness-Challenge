@@ -36,4 +36,4 @@ def pick_winner(request):
 def winner(request, entry_id):
     entry = WorkoutEntry.objects.get(id=entry_id)
 
-    return render_to_response("fitness_challenge/winner.html", {'entry': entry})
+    return render_to_response("fitness_challenge/winner.html", {'entry': entry}, context_instance=RequestContext(request))
