@@ -1,7 +1,0 @@
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fitness_challenge.css" />
-<h1>Let's pick a winner!</h1>
-<form action="/fitness_challenge/pick_winner/" method="post">
-{% csrf_token %}
-    <input type="submit" class="custom" value="Choose Winner"/>
-</form>
-

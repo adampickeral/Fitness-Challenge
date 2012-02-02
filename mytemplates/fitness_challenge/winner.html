@@ -1,30 +1,48 @@
 <link type="text/css" href="{{ STATIC_URL }}jquery-ui-1.8.17.custom/css/custom-theme/jquery-ui-1.8.17.custom.css" rel="Stylesheet" />
 <script type="text/javascript" src="{{ STATIC_URL }}jquery-ui-1.8.17.custom/js/jquery-1.7.1.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}jquery-ui-1.8.17.custom/js/jquery-ui-1.8.17.custom.min.js"></script>
+
 <script type="text/javascript">
-    var colors = ["#B8D4S0", "#3AB745", "#029990", "#3501CB",
+    var colors = ["#B8D430", "#3AB745", "#029990", "#3501CB",
                   "#2E2C75", "#673A7E", "#CC0071", "#F80120",
                   "#F35B20", "#FB9A00", "#FFCC00", "#FEF200"];
 
-    var restaraunts = ["Wendy's", "McDonalds", "Chick-fil-a", "Five Guys",
-                       "Gold Star", "La Mexicana", "Chipotle", "Tazza Mia",
-                       "Panera", "Just Crepes", "Arby's", "Indian"];
-
     var startAngle = 0;
-    var halfEntrySize = {{ entries_size }} / 2;
+    var halfEntrySize = {{ entries|length }} / 2;
+    var arc = Math.PI / halfEntrySize;
     var spinTimeout = null;
 
     var spinArcStart = 10;
     var spinTime = 0;
+    var spinTimeTotal = 0;
 
     var ctx;
+
+    var snd = new Audio("{{ STATIC_URL }}audio/file.mp3");
+
+    var color_map = Array()
+    var color_index = 0
+    {% for entry in entries %}
+        color_map.push(color_index);
+        if (color_index > 11) {
+            color_index = 0;
+        }
+        else {
+            color_index += 1;
+        }
+    {% endfor %}
+
+    var entry_name_map = Array()
+    {% for entry in entries %}
+        entry_name_map.push('{{ entry.name }}');
+    {% endfor %}
 
     function drawRouletteWheel() {
         var canvas = document.getElementById("canvas");
         if(canvas.getContext) {
             var outsideRadius = 200;
-            var textRadius = 160;
-            var insideRadius = 125;
+            var textRadius = 160
+            var insideRadius = 25;
 
             ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, 500, 500);
@@ -34,12 +52,12 @@
 
             ctx.font = 'bold 12px Helvetica, Arial';
             {% for entry in entries %}
-                var angle = startAngle + {{ forloop.counter0}} * {{ arc }};
-                ctx.fillStyle = colors[Math.ceil(Math.random() * 12)];
+                var angle = startAngle + {{ forloop.counter0}} * arc;
+                ctx.fillStyle = colors[color_map[{{ forloop.counter0 }}]]
 
                 ctx.beginPath();
-                ctx.arc(250, 250, outsideRadius, angle, angle + {{ arc }}, false);
-                ctx.arc(250, 250, insideRadius, angle + {{ arc }}, angle, true);
+                ctx.arc(250, 250, outsideRadius, angle, angle + arc, false);
+                ctx.arc(250, 250, insideRadius, angle + arc, angle, true);
                 ctx.stroke();
                 ctx.fill();
 
@@ -47,13 +65,16 @@
                 ctx.shadowOffsetX = -1;
                 ctx.shadowOffsetY = -1;
                 ctx.shadowBlur    = 0;
-                ctx.shadowColor   = "rgb(220,220,220)";
-                ctx.fillStyle = "black";
-                ctx.translate(250 + Math.cos(angle + {{ arc }} / 2) * textRadius,
-                              250 + Math.sin(angle + {{ arc }} / 2) * textRadius);
-                ctx.rotate(angle + {{ arc }} / 2 + Math.PI / 2);
+                ctx.shadowColor   = "rgb(0,0,0)";
+                ctx.fillStyle = "white";
+                ctx.translate(250 + Math.cos(angle + arc / 2) * textRadius,
+                              250 + Math.sin(angle + arc / 2) * textRadius);
+                ctx.rotate(angle + arc / 2 + Math.PI);
                 var text = '{{ entry.name }}';
-                ctx.fillText(text, ctx.measureText(text).width / 2, 0);
+                {% if entry.name|length > 15 %}
+                    text = '{{ entry.name|slice:":15" }}...'
+                {% endif %}
+                ctx.fillText(text, -ctx.measureText(text).width / 3, 0);
                 ctx.restore();
             {% endfor %}
 
@@ -74,17 +95,20 @@
     }
 
     function spin() {
+        spinAngleStart = Math.random() * 10 + 10;
         spinTime = 0;
+        spinTimeTotal = Math.random() * 3 + 4 * 1000;
+        snd.play();
         rotateWheel();
     }
 
     function rotateWheel() {
-        spinTime += 30;
-        if (spinTime >= {{ spin_time_total }}) {
+        spinTime += 7;
+        if (spinTime >= spinTimeTotal) {
             stopRotateWheel();
             return;
         }
-        var spinAngle = {{ spin_angle_start }} - easeOut(spinTime, 0, {{ spin_angle_start }}, {{ spin_time_total }});
+        var spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
         startAngle += (spinAngle * Math.PI / 180);
         drawRouletteWheel();
         spinTimeout = setTimeout('rotateWheel()', 30);
@@ -92,9 +116,16 @@
 
     function stopRotateWheel() {
         clearTimeout(spinTimeout);
+        var degrees = startAngle * 180 / Math.PI + 90;
+        var arcd = arc * 180 / Math.PI;
+        var index = Math.floor((360 - degrees % 360) / arcd);
         ctx.save();
+        snd.pause();
         ctx.font = 'bold 30px Helvetica, Arial';
-        var text = '{{ winner.name }}'
+        var text = entry_name_map[index];
+        if (entry_name_map[index].length > 25) {
+            text = entry_name_map[index].substring(0, 24) + '...'
+        }
         ctx.fillText(text, 250 - ctx.measureText(text).width / 2, 250 + 10);
         ctx.restore();
     }
@@ -113,11 +144,7 @@
 
 <h1>And the winner is....</h1>
 
-<h3>{{ winner.name }} from their workout on {{ winner.date }}!</h3>
-
-<br/>
+<input type="button" value="spin" onclick="spin();" style="float:left;" />
+<canvas id="canvas" width="1000" height="1000"></canvas>
 
 <a href="/fitness_challenge">Home</a>
-
-<input type="button" value="spin" onclick="spin();" style="float:left;" />
-<canvas id="canvas" width="500" height="500"></canvas>

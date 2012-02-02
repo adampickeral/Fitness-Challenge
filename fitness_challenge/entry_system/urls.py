@@ -5,7 +5,5 @@ urlpatterns = patterns('entry_system.views',
     url(r'^$', 'fitness_challenge'),
     url(r'^entry/', 'entry'),
     url(r'^process/', 'process'),
-    url(r'^drawing/', 'drawing'),
-    url(r'^pick_winner/', 'pick_winner'),
-    url(r'^winner/(?P<entry_id>\d+)', 'winner'),
+    url(r'^winner/', 'winner'),
 )
